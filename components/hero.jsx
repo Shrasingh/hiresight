@@ -31,7 +31,7 @@ const HeroSection = () => {
       <div className="space-y-6 text-center">
         <div className="space-y-6 mx-auto">
           <h1 className="text-5xl font-bold md:text-6xl lg:text-7xl xl:text-8xl gradient-title animate-gradient">
-            Your AI Career Coach for
+            hireSight is your AI Career Coach for
             <br />
             Professional Success
           </h1>
@@ -46,11 +46,7 @@ const HeroSection = () => {
               Get Started
             </Button>
           </Link>
-          <Link href="https://www.youtube.com/roadsidecoder">
-            <Button size="lg" variant="outline" className="px-8">
-              Watch Demo
-            </Button>
-          </Link>
+          
         </div>
         <div className="hero-image-wrapper mt-5 md:mt-0">
           <div ref={imageRef} className="hero-image">
