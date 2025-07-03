@@ -46,7 +46,7 @@ Hiresight is an intelligent, full-stack AI-powered career coach built with moder
 ### 🖥️ Screenshot Preview
 ![Dashboard](./public/dashboard.png)
 ![Screenshot](./public/dashboard1.png)
-![Screenshot](./public/dashboard2.png)
+![Screenshot2](./public/dashboard2.png)
 
 
 > _
