@@ -10,7 +10,7 @@ Hiresight is an intelligent, full-stack AI-powered career coach built with moder
 
 ## 🚀 Tech Stack
 
-- **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS, Shadcn UI  
+- **Frontend:** Next.js 14, React, JavaScript, Tailwind CSS, Shadcn UI  
 - **Backend:** Prisma ORM, PostgreSQL  
 - **AI:** Google Gemini API (Generative AI for career insights & mock interviews)  
 - **Workflow:** Inngest (for background jobs like weekly insights)  
