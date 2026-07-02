@@ -16,8 +16,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Image from "next/image";
 import { checkUser } from "@/lib/checkUser";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default async function Header() {
   await checkUser();
@@ -25,12 +25,18 @@ export default async function Header() {
   return (
     <header className="fixed top-0 w-full border-b bg-background/80 backdrop-blur-md z-50 supports-[backdrop-filter]:bg-background/60">
       <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/">
-          
+        <Link href="/" className="flex items-center gap-2 group" aria-label="hireSight home">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-black font-extrabold text-sm tracking-tight ring-1 ring-black/10 shadow-sm transition-transform duration-300 group-hover:scale-105">
+            hS
+          </span>
+          <span className="text-xl font-extrabold tracking-tight">
+            hire<span className="text-gradient">Sight</span>
+          </span>
         </Link>
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-2 md:space-x-4">
+          <ThemeToggle />
           <SignedIn>
             <Link href="/dashboard">
               <Button

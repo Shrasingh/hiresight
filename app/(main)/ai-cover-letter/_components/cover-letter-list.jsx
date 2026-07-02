@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Edit2, Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Card,
@@ -12,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,18 +29,23 @@ import { deleteCoverLetter } from "@/actions/cover-letter";
 
 export default function CoverLetterList({ coverLetters }) {
   const router = useRouter();
+  const [items, setItems] = useState(coverLetters || []);
 
   const handleDelete = async (id) => {
+    // Optimistic removal, rollback on failure.
+    const previous = items;
+    setItems((curr) => curr.filter((l) => l.id !== id));
     try {
       await deleteCoverLetter(id);
-      toast.success("Cover letter deleted successfully!");
+      toast.success("Cover letter deleted!");
       router.refresh();
     } catch (error) {
+      setItems(previous);
       toast.error(error.message || "Failed to delete cover letter");
     }
   };
 
-  if (!coverLetters?.length) {
+  if (!items.length) {
     return (
       <Card>
         <CardHeader>
@@ -53,29 +60,37 @@ export default function CoverLetterList({ coverLetters }) {
 
   return (
     <div className="space-y-4">
-      {coverLetters.map((letter) => (
-        <Card key={letter.id} className="group relative ">
+      {items.map((letter) => (
+        <Card key={letter.id} className="group relative transition-shadow hover:shadow-premium">
           <CardHeader>
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div>
-                <CardTitle className="text-xl gradient-title">
-                  {letter.jobTitle} at {letter.companyName}
-                </CardTitle>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <CardTitle className="text-xl gradient-title">
+                    {letter.jobTitle} at {letter.companyName}
+                  </CardTitle>
+                  <Badge
+                    variant={letter.status === "completed" ? "default" : "secondary"}
+                  >
+                    {letter.status === "completed" ? "Completed" : "Draft"}
+                  </Badge>
+                </div>
                 <CardDescription>
                   Created {format(new Date(letter.createdAt), "PPP")}
                 </CardDescription>
               </div>
               <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Open cover letter"
+                  onClick={() => router.push(`/ai-cover-letter/${letter.id}`)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
                 <AlertDialog>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => router.push(`/ai-cover-letter/${letter.id}`)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="icon">
+                    <Button variant="outline" size="icon" aria-label="Delete cover letter">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>

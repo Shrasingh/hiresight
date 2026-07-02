@@ -68,8 +68,7 @@ export default function CoverLetterGenerator() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Form fields remain the same */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="companyName">Company Name</Label>
                 <Input
@@ -112,6 +111,10 @@ export default function CoverLetterGenerator() {
                   {errors.jobDescription.message}
                 </p>
               )}
+              <p className="text-xs text-muted-foreground">
+                Your profile and saved résumé are used to ground the letter in
+                real, truthful details — no fabricated experience.
+              </p>
             </div>
 
             <div className="flex justify-end">
