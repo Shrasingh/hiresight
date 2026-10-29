@@ -56,24 +56,11 @@ export default function Quiz() {
     }
   };
 
-  const calculateScore = () => {
-    let correct = 0;
-    answers.forEach((answer, index) => {
-      if (answer === quizData[index].correctAnswer) {
-        correct++;
-      }
-    });
-    return (correct / quizData.length) * 100;
-  };
-
   const finishQuiz = async () => {
-    const score = calculateScore();
-    try {
-      await saveQuizResultFn(quizData, answers, score);
-      toast.success("Quiz completed!");
-    } catch (error) {
-      toast.error(error.message || "Failed to save quiz results");
-    }
+    // The score is recomputed on the server from the answers; useFetch
+    // already toasts the error, so only celebrate when the save succeeded.
+    const saved = await saveQuizResultFn(quizData, answers);
+    if (saved) toast.success("Quiz completed!");
   };
 
   const startNewQuiz = () => {

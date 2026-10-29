@@ -72,3 +72,57 @@ export const coverLetterSchema = z.object({
   jobTitle: z.string().min(1, "Job title is required"),
   jobDescription: z.string().min(1, "Job description is required"),
 });
+
+// ---------------------------------------------------------------------------
+// Server-side schemas (validate what server actions actually receive).
+// ---------------------------------------------------------------------------
+
+/** Payload sent by the onboarding form AFTER the client-side transforms. */
+export const onboardingServerSchema = z.object({
+  // Combined "<industryId>-<sub-industry-slug>" key, e.g.
+  // "tech-software-development" or "tech-data-science-&-analytics".
+  industry: z.string().trim().min(1, "Please select an industry").max(120),
+  experience: z
+    .number({ invalid_type_error: "Experience must be a number" })
+    .int()
+    .min(0, "Experience must be at least 0 years")
+    .max(50, "Experience cannot exceed 50 years"),
+  bio: z.string().max(500).optional().nullable(),
+  skills: z.array(z.string().trim().min(1).max(60)).max(50).optional(),
+});
+
+/** Shape of the JSON the AI must return for an industry. Mirrors the
+ *  IndustryInsight Prisma model so a malformed response never reaches the DB. */
+export const industryInsightSchema = z.object({
+  salaryRanges: z
+    .array(
+      z.object({
+        role: z.string(),
+        min: z.number(),
+        max: z.number(),
+        median: z.number(),
+        location: z.string().optional().default(""),
+      })
+    )
+    .min(1),
+  growthRate: z.number(),
+  demandLevel: z.enum(["High", "Medium", "Low"]),
+  topSkills: z.array(z.string()).min(1),
+  marketOutlook: z.enum(["Positive", "Neutral", "Negative"]),
+  keyTrends: z.array(z.string()).min(1),
+  recommendedSkills: z.array(z.string()).min(1),
+});
+
+/** Shape of the quiz the AI must return for a mock interview. */
+export const quizSchema = z.object({
+  questions: z
+    .array(
+      z.object({
+        question: z.string().min(1),
+        options: z.array(z.string()).length(4),
+        correctAnswer: z.string().min(1),
+        explanation: z.string().default(""),
+      })
+    )
+    .min(1),
+});
