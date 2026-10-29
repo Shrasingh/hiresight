@@ -41,6 +41,11 @@ export default function PerformanceChart({ assessments }) {
         <CardDescription>Your quiz scores over time</CardDescription>
       </CardHeader>
       <CardContent>
+        {chartData.length === 0 ? (
+          <div className="h-[200px] flex items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
+            Your scores will appear here after your first quiz.
+          </div>
+        ) : (
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
@@ -73,6 +78,7 @@ export default function PerformanceChart({ assessments }) {
             </LineChart>
           </ResponsiveContainer>
         </div>
+        )}
       </CardContent>
     </Card>
   );
