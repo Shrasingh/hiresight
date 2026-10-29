@@ -1,0 +1,46 @@
+name: CI
+
+# Quality gate for every change on the way to production:
+#   develop  -> ongoing work (PRs from feature branches target this)
+#   staging  -> release candidate / QA
+#   master   -> production (Vercel deploys from here)
+on:
+  push:
+    branches: [develop, staging, master]
+  pull_request:
+    branches: [develop, staging, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Build-time placeholders only. No real service is contacted:
+      # `prisma generate` and `next build` never open a DB connection, and
+      # Clerk/Gemini keys are only read at request time.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_test_ci_placeholder
+      GEMINI_API_KEY: ci-placeholder
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install (runs `prisma generate` via postinstall)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build
