@@ -2,75 +2,76 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { getGeminiModel } from "@/lib/gemini";
+import { generateText } from "@/lib/gemini";
 import { revalidatePath } from "next/cache";
+import { dbErrorMessage, isDbError } from "@/lib/errors";
 
-const model = getGeminiModel();
+const MAX_RESUME_CHARS = 50_000;
 
-export async function saveResume(content) {
+async function getCurrentUser() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
+  let user;
+  try {
+    user = await db.user.findUnique({ where: { clerkUserId: userId } });
+  } catch (error) {
+    console.error("[resume] user lookup failed:", error);
+    throw new Error(dbErrorMessage(error));
+  }
   if (!user) throw new Error("User not found");
+  return user;
+}
+
+export async function saveResume(content) {
+  const user = await getCurrentUser();
+
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("Add some resume details before saving.");
+  }
+  if (content.length > MAX_RESUME_CHARS) {
+    throw new Error("Resume is too long to save. Please shorten it.");
+  }
 
   try {
     const resume = await db.resume.upsert({
-      where: {
-        userId: user.id,
-      },
-      update: {
-        content,
-      },
-      create: {
-        userId: user.id,
-        content,
-      },
+      where: { userId: user.id },
+      update: { content },
+      create: { userId: user.id, content },
     });
 
     revalidatePath("/resume");
     return resume;
   } catch (error) {
-    console.error("Error saving resume:", error);
+    console.error("[resume] saveResume failed:", error);
+    if (isDbError(error)) throw new Error(dbErrorMessage(error));
     throw new Error("Failed to save resume");
   }
 }
 
 export async function getResume() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const user = await getCurrentUser();
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) throw new Error("User not found");
-
-  return await db.resume.findUnique({
-    where: {
-      userId: user.id,
-    },
-  });
+  try {
+    return await db.resume.findUnique({ where: { userId: user.id } });
+  } catch (error) {
+    console.error("[resume] getResume failed:", error);
+    throw new Error(dbErrorMessage(error));
+  }
 }
 
 export async function improveWithAI({ current, type }) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const user = await getCurrentUser();
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-    include: {
-      industryInsight: true,
-    },
-  });
-
-  if (!user) throw new Error("User not found");
+  if (typeof current !== "string" || !current.trim()) {
+    throw new Error("Write a description first, then improve it with AI.");
+  }
+  const section = typeof type === "string" && type.trim() ? type : "entry";
 
   const prompt = `
-    As an expert resume writer, improve the following ${type} description for a ${user.industry} professional.
+    As an expert resume writer, improve the following ${section} description for a ${
+      user.industry || "technology"
+    } professional.
     Make it more impactful, quantifiable, and aligned with industry standards.
     Current content: "${current}"
 
@@ -81,17 +82,14 @@ export async function improveWithAI({ current, type }) {
     4. Keep it concise but detailed
     5. Focus on achievements over responsibilities
     6. Use industry-specific keywords
-    
+
     Format the response as a single paragraph without any additional text or explanations.
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const improvedContent = response.text().trim();
-    return improvedContent;
+    return await generateText(prompt, { temperature: 0.6, maxOutputTokens: 400 });
   } catch (error) {
-    console.error("Error improving content:", error);
-    throw new Error("Failed to improve content");
+    console.error("[resume] improveWithAI failed:", error);
+    throw new Error(error?.message || "Failed to improve content");
   }
 }

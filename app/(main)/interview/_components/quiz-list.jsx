@@ -42,6 +42,22 @@ export default function QuizList({ assessments }) {
           </div>
         </CardHeader>
         <CardContent>
+          {!assessments?.length && (
+            <div className="rounded-xl border border-dashed py-12 text-center text-muted-foreground">
+              <p className="font-medium text-foreground">No quizzes yet</p>
+              <p className="text-sm mt-1">
+                Take your first mock interview to see your score, review each
+                answer, and get an AI improvement tip.
+              </p>
+              <Button
+                className="mt-4"
+                variant="outline"
+                onClick={() => router.push("/interview/mock")}
+              >
+                Start your first quiz
+              </Button>
+            </div>
+          )}
           <div className="space-y-4">
             {assessments?.map((assessment, i) => (
               <Card
